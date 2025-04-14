@@ -10,7 +10,7 @@ import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import Result from "./pages/Result.jsx";
 import UrlRedirect from "./pages/UrlRedirect.jsx";
-import NewLink from "./pages/newLink.jsx";
+import NewLink from "./pages/LinkForm.jsx";
 
 const router = createBrowserRouter([
 	{
