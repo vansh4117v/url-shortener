@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Form from "../components/Form";
 import authService from "../appwrite/auth";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../store/userSlice";
 
 const Signup = () => {
