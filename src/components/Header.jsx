@@ -43,7 +43,7 @@ const Header = () => {
 					</Link>
 				)}
 				{!isLoggedIn && (
-					<Link to="/register" className="cursor-pointer">
+					<Link to="/signup" className="cursor-pointer">
 						Register
 					</Link>
 				)}
