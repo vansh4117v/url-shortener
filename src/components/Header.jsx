@@ -27,11 +27,11 @@ const Header = () => {
 				4117v
 			</Link>
 			<div className="flex justify-between gap-6 text-xl">
-				{isLoggedIn && (
+				{/* {isLoggedIn && (
 					<Link to="/profile" className="cursor-pointer">
 						Profile
 					</Link>
-				)}
+				)} */}
 				{isLoggedIn && (
 					<div onClick={handleLogout} className="cursor-pointer">
 						Logout
