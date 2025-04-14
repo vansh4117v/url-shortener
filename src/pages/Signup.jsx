@@ -3,10 +3,12 @@ import Form from "../components/Form";
 import authService from "../appwrite/auth";
 import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../store/userSlice";
+import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
 	const [data, setData] = useState();
 	const dispatch = useDispatch();
+	const navigate = useNavigate();
 	const longUrl = useSelector((state) => state.url.longUrl);
 
 	const signup = async () => {
