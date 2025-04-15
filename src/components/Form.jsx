@@ -1,20 +1,28 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import Input from "./Input";
 
-const Form = ({ signup = "", setData }) => {
+const Form = ({ signup = "", setData, authError = null,setAuthError }) => {
 	const {
 		register,
 		handleSubmit,
 		watch,
 		formState: { errors },
 	} = useForm();
-	const password = watch("password");
 
 	const submitForm = (data) => {
 		setData(data);
 	};
+
+	const email = watch("email");
+	const password = watch("password");
+
+	useEffect(() => {
+		if (authError && (email || password)) {
+			setAuthError(null);
+		}
+	}, [email, password]);
 
 	return (
 		<form
@@ -27,7 +35,7 @@ const Form = ({ signup = "", setData }) => {
 			<div className="-mt-6">
 				{signup ? (
 					<>
-						Already have an account? <Link to="/login">Login</Link>
+						Already have an account?{" "}<Link to="/login"><u>Login</u></Link>
 					</>
 				) : (
 					<>
@@ -38,6 +46,10 @@ const Form = ({ signup = "", setData }) => {
 					</>
 				)}
 			</div>
+
+			{authError && (
+				<p className="text-red-600 text-center px-5">{authError}</p>
+			)}
 
 			{signup && (
 				<>
@@ -77,6 +89,7 @@ const Form = ({ signup = "", setData }) => {
 					},
 				})}
 			/>
+
 			{errors.password && (
 				<p className="text-red-600 -mt-4 text-center">
 					{errors.password.message}

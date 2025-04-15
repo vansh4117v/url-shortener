@@ -11,6 +11,7 @@ import Signup from "./pages/Signup.jsx";
 import Result from "./pages/Result.jsx";
 import UrlRedirect from "./pages/UrlRedirect.jsx";
 import NewLink from "./pages/LinkForm.jsx";
+import Profile from "./pages/Profile.jsx";
 
 const router = createBrowserRouter([
 	{
@@ -56,7 +57,14 @@ const router = createBrowserRouter([
 					</AuthLayout>
 				),
 			},
-			
+			{
+				path: "profile",
+				element: (
+					<AuthLayout authenticationNeeded={true}>
+						<Profile />
+					</AuthLayout>
+				),
+			}
 		],
 	},
 	{

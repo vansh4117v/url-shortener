@@ -10,8 +10,10 @@ const Login = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate();
   const longUrl = useSelector((state) => state.url.longUrl);
+  const [error, setError] = useState("");
 
   const login = async () => {
+		setError("")
     try {
       const response = await authService.login(data);
       // console.log("🚀 ~ login ~ response:", response)
@@ -26,7 +28,13 @@ const Login = () => {
       }
     } catch (error) {
       console.error("Error logging in:", error);
-      
+			if (error?.message.toLowerCase() === "failed to fetch") {
+				setError(
+					"Some Error occurred. Please check your internet connection."
+				);
+			} else {
+				setError(error?.message);
+			}
     }
   }
 
@@ -36,7 +44,7 @@ const Login = () => {
     }
   }, [data]);
 
-	return <Form setData={setData} />;
+	return <Form setData={setData} authError = {error} setAuthError={setError}  />;
 };
 
 export default Login;

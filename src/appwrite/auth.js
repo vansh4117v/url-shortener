@@ -31,7 +31,7 @@ export class AuthService {
         console.log("🚀 ~ AuthService ~ login ~ email:", email)
         try {
             const response = await this.account.createEmailPasswordSession(email, password);
-            console.log("🚀 ~ AuthService ~ login ~ response:", response)
+            // console.log("🚀 ~ AuthService ~ login ~ response:", response)
             if (response) {
                 return this.getCurrentUser();
             }
@@ -42,7 +42,7 @@ export class AuthService {
     }
 
     async getCurrentUser() {
-        console.log("🚀 ~ AuthService ~ getCurrentUser")
+        // console.log("🚀 ~ AuthService ~ getCurrentUser")
         try {
             const response = await this.account.get();
             return response;

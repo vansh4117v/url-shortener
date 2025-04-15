@@ -34,7 +34,7 @@ const App = () => {
 			loading.....
 		</div>
 	) : (
-		<div className="bg-[#000319] h-screen flex flex-col">
+		<div className="bg-[#000319] min-h-screen flex flex-col">
 			<Header />
 			<Outlet />
 		</div>

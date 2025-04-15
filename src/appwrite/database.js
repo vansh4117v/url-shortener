@@ -67,10 +67,8 @@ export class Service {
 		}
 	}
 
-	async getPosts(queries = [Query.equal("status", "active")], userId) {
-		if (userId) {
-			queries = [Query.equal("userId", userId)];
-		}
+	async getPosts(userId, queries = [Query.equal("userId", userId)]) {
+		// console.log("🚀 ~ Service ~ getPosts ~ userId:", userId)
 		try {
 			return await this.databases.listDocuments(
 				conf.appwriteDatabaseId,

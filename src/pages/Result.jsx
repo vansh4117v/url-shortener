@@ -35,14 +35,14 @@ const Result = () => {
             </div>
 			<a
                 href={`${window.location.origin}/p/${urlInfo?.shortUrl}`}
-                className="text-xl font-semibold text-blue-500"
+                className="text-lg font-semibold text-blue-500 max-w-4/5 block whitespace-nowrap text-ellipsis overflow-hidden"
             >{`${window.location.origin}/p/${urlInfo?.shortUrl}`}</a>
             
 			<div className="text-3xl font-bold mt-8">LongUrl</div>
 			<a
                 href={urlInfo?.longUrl}
-                className="text-xl font-semibold text-blue-500 mb-8 max-w-4/5 block whitespace-nowrap text-ellipsis overflow-hidden"
-            >{`${window.location.origin}/p/${urlInfo?.longUrl}`}</a>
+                className="text-lg font-semibold text-blue-500 mb-8 max-w-4/5 block whitespace-nowrap text-ellipsis overflow-hidden"
+            >{urlInfo?.longUrl}</a>
             
             <img className="mx-auto" src={`https://api.qrserver.com/v1/create-qr-code/?size=${(window.innerWidth>1024)?"300x300":"200x200"}&data=${`${window.location.origin}/p/${urlInfo?.shortUrl}`}`} alt="qr code loading" />
 		</div>

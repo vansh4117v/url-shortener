@@ -9,9 +9,11 @@ const Signup = () => {
 	const [data, setData] = useState();
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
+	const [error, setError] = useState("");
 	const longUrl = useSelector((state) => state.url.longUrl);
 
 	const signup = async () => {
+		setError("");
 		try {
 			const response = await authService.createAccount(data);
 			// console.log("🚀 ~ signup ~ response:", response);
@@ -30,7 +32,14 @@ const Signup = () => {
 				}
 			}
 		} catch (error) {
-			console.error("Error logging in:", error);
+			console.error("Error in Signup:", error);
+			if (error?.message.toLowercase() === "failed to fetch") {
+				setError(
+					"Some Error occurred. Please check your internet connection."
+				);
+			} else {
+				setError(error?.message);
+			}
 		}
 	};
 
@@ -40,7 +49,14 @@ const Signup = () => {
 		}
 	}, [data]);
 
-	return <Form signup={true} setData={setData} />;
+	return (
+		<Form
+			signup={true}
+			setData={setData}
+			authError={error}
+			setAuthError={setError}
+		/>
+	);
 };
 
 export default Signup;
