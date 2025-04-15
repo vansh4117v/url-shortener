@@ -18,23 +18,22 @@ const SingleLink = ({ data, onDelete }) => {
 				<div className="font-semibold text-xl w-full truncate flex justify-between relative">
 					<div>{data.title}</div>
 					<div className="flex gap-4 h-full items-center">
-
 					<div
-						className="cursor-pointer"
+						className="cursor-pointer text-base"
 						onClick={(e) => {
 							navigator.clipboard.writeText(
 								`${window.location.origin}/p/${data?.shortUrl}`
 							);
-							e.target.innerText = "copied!";
+							e.target.innerText = "Copied!";
 							setTimeout(() => {
-								e.target.innerText = "copy";
+								e.target.innerText = "Copy";
 							}, 2000);
 						}}
 					>
 						Copy
 						</div>
 						<div onClick={handleDelete} className="cursor-pointer">
-						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
 						</div>
 					</div>
 				</div>
