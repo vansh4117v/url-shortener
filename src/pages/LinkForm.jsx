@@ -12,7 +12,6 @@ const NewLink = () => {
 	const navigate = useNavigate();
 	const defaultUrl = useSelector((state) => state.url.longUrl);
 	const userId = useSelector((state) => state.user.userData.id);
-	// console.log("🚀 ~ NewLink ~ defaultUrl:", defaultUrl);
 	const {
 		register,
 		handleSubmit,
@@ -85,12 +84,6 @@ const NewLink = () => {
 		}
 	};
 
-	useEffect(() => {
-		if (defaultUrl === "example") {
-			// console.log("🚀 ~ useEffect ~ defaultUrl:", defaultUrl);
-			setValue("url", "", { shouldRender: true });
-		}
-	}, [defaultUrl, setValue]);
 
 	if (defaultUrl === undefined)
 		return <p className="text-white">Loading...</p>;

@@ -38,7 +38,7 @@ const Login = () => {
 			console.error("Error logging in:", error);
 			if (error?.message.toLowerCase() === "failed to fetch") {
 				setError(
-					"Some Error occurred. Please check your internet connection."
+					"Some Error occurred. Please check your internet connection or try again later."
 				);
 			} else {
 				setError(error?.message);
