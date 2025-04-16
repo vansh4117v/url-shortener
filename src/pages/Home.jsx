@@ -11,7 +11,8 @@ const Home = () => {
 	// console.log("🚀 ~ Home ~ isLoggedIn:", isLoggedIn);
 	const ref = useRef();
 
-	const handleClick = () => {
+	const handleClick = (e) => {
+		e.preventDefault();
 		dispatch(setUrl({longUrl:ref.current.value}));
 		if (isLoggedIn) {
 			navigate("/newLink");
@@ -29,7 +30,7 @@ const Home = () => {
 			<h1 className="text-center font-extrabold text-3xl my-12 lg:my-10 lg:text-5xl">
 				URL Shortener
 			</h1>
-			<div className="flex flex-col w-full lg:flex-row lg:w-2/3 gap-4 items-center justify-center">
+			<form onSubmit={handleClick} className="flex flex-col w-full lg:flex-row lg:w-2/3 gap-4 items-center justify-center">
 				<Input
 					placeholder="Enter link to shorten"
 					type="url"
@@ -37,11 +38,11 @@ const Home = () => {
 				/>
 				<button
 					className="bg-red-500 w-4/5 lg:w-1/5 p-2 rounded-lg"
-					onClick={handleClick}
+					type="submit"
 				>
 					Shorten!
 				</button>
-			</div>
+			</form>
 		</div>
 	);
 };

@@ -1,15 +1,17 @@
 import { useDispatch, useSelector } from "react-redux";
 import { setUrl } from "../store/urlSlice";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useState } from "react";
 import Input from "../components/Input";
 import { useForm } from "react-hook-form";
 import service from "../appwrite/database";
 import { nanoid } from "@reduxjs/toolkit";
+import Loading from "../components/Loading";
 
 const NewLink = () => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
+	const [loading, setLoading] = useState(false);
 	const defaultUrl = useSelector((state) => state.url.longUrl);
 	const userId = useSelector((state) => state.user.userData.id);
 	const {
@@ -27,6 +29,7 @@ const NewLink = () => {
 	});
 
 	const onSubmit = async (data) => {
+		setLoading(true);
 		// console.log("🚀 ~ onSubmit ~ data:", data);
 		try {
 			const response = await service.createPost({
@@ -82,6 +85,9 @@ const NewLink = () => {
 		} catch (error) {
 			console.log("🚀 ~ onSubmit ~ error:", error);
 		}
+		finally {
+			setLoading(false);
+		}
 	};
 
 
@@ -89,6 +95,9 @@ const NewLink = () => {
 		return <p className="text-white">Loading...</p>;
 
 	return (
+		<>
+		{loading && <Loading />}
+		
 		<div className="flex-1 text-white p-5 text-center flex flex-col items-center">
 			<h1 className="text-center font-extrabold text-3xl my-12 lg:my-10 lg:text-5xl">
 				URL Shortener
@@ -139,6 +148,7 @@ const NewLink = () => {
 				</button>
 			</form>
 		</div>
+		</>
 	);
 };
 
