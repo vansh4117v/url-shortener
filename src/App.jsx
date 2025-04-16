@@ -34,9 +34,14 @@ const App = () => {
 			loading.....
 		</div>
 	) : (
-		<div className="bg-[#000319] min-h-screen flex flex-col">
+		<div className="min-h-screen flex flex-col bg-[#000319] ">
 			<Header />
-			<Outlet />
+			<main className="flex-1 h-full relative">
+				<Outlet />
+			</main>
+			<div className="border-t-2 border-slate-400 text-center py-4 text-white mt-2">
+				Made by vansh4117v
+			</div>
 		</div>
 	);
 };

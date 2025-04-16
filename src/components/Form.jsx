@@ -27,7 +27,7 @@ const Form = ({ signup = "", setData, authError = null,setAuthError }) => {
 	return (
 		<form
 			onSubmit={handleSubmit(submitForm)}
-			className="border-2 border-white gap-8 text-white w-4/5 lg:w-1/3 rounded-md text-center flex flex-col mx-auto mt-10 items-center py-6 lg:px-8"
+			className="border-2 border-white gap-8 text-white w-4/5 lg:w-1/3 rounded-md text-center flex flex-col mx-auto mt-11 items-center py-6 lg:px-8"
 		>
 			<h1 className="text-3xl font-bold">
 				{signup ? "Signup" : "Login"}

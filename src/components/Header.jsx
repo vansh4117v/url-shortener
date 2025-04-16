@@ -27,9 +27,9 @@ const Header = () => {
 	return (
 		<>
 			{loading && <Loading />}
-			<div className="flex justify-between items-center py-3 px-14 italic cursor-pointer text-white">
+			<div className="flex justify-between items-center py-3 lg:py-4 px-12 lg:px-20 border-b-2 border-slate-400 italic cursor-pointer text-white">
 				<Link to="/" className="text-2xl font-bold">
-					4117v
+					Clixly
 				</Link>
 				<div className="flex justify-between gap-6 text-xl">
 					{isLoggedIn && (
@@ -48,7 +48,7 @@ const Header = () => {
 						</Link>
 					)}
 					{!isLoggedIn && (
-						<Link to="/signup" className="cursor-pointer">
+						<Link to="/signup" className="cursor-pointer hidden lg:block">
 							Register
 						</Link>
 					)}
