@@ -126,17 +126,13 @@ const HomePage = () => {
                   } focus:outline-none focus:ring-2 transition-all`}
                   placeholder="https://example.com/very/long/url"
                 />
-                {errors.longUrl && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <Error message={errors.longUrl.message} />
-                  </div>
-                )}
-                {/* API validation error for longUrl */}
-                {error?.errors?.find((e) => e.field === "longUrl") && (
-                  <div className="absolute -bottom-6 left-0">
+                <div className="min-h-[24px] mt-1">
+                  {errors.longUrl && <Error message={errors.longUrl.message} />}
+                  {/* API validation error for longUrl */}
+                  {error?.errors?.find((e) => e.field === "longUrl") && (
                     <Error message={error.errors.find((e) => e.field === "longUrl").message} />
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
 
@@ -150,16 +146,19 @@ const HomePage = () => {
                 <div className="bg-gray-50 px-3 py-3 text-gray-500 text-sm border-r flex items-center whitespace-nowrap">
                   {import.meta.env.VITE_BASE_URL}/
                 </div>
-                <input
-                  {...register("shortId")}
-                  type="text"
-                  className={`flex-1 px-3 py-3 border-none outline-none ${
-                    errors.shortId || error?.errors?.find((e) => e.field === "shortId")
-                      ? "focus:ring-red-200"
-                      : "focus:ring-blue-200"
-                  }`}
-                  placeholder="my-custom-id"
-                />
+                <div className="flex-1 overflow-x-auto">
+                  <input
+                    {...register("shortId")}
+                    type="text"
+                    className={`w-full px-3 py-3 border-none outline-none ${
+                      errors.shortId || error?.errors?.find((e) => e.field === "shortId")
+                        ? "focus:ring-red-200"
+                        : "focus:ring-blue-200"
+                    }`}
+                    placeholder="my-custom-id"
+                    style={{ minWidth: 0 }}
+                  />
+                </div>
               </div>
               {/* Error messages below the input */}
               {errors.shortId && (
