@@ -7,7 +7,10 @@ import { config } from "./config/env.js";
 import { securityConfig } from "./config/security.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
+
 import { logger, morganMiddleware } from "./utils/logger.js";
+import { connectRedis, disconnectRedis } from "./config/redis.js";
+import { startClickCountSync, syncClickCounts } from "./utils/clickSync.js";
 import authRoutes from "./routes/auth.routes.js";
 import urlRoutes from "./routes/url.routes.js";
 
@@ -68,11 +71,29 @@ app.use(notFound);
 app.use(errorHandler);
 
 // Graceful shutdown handler
-const gracefulShutdown = (signal) => {
+const gracefulShutdown = async (signal) => {
   logger.info(`${signal} received. Starting graceful shutdown...`);
   
-  server.close(() => {
+  // Close HTTP server
+  server.close(async () => {
     logger.info('HTTP server closed.');
+    
+    // Sync any remaining click counts before disconnecting
+    try {
+      logger.info('Syncing remaining click counts...');
+      await syncClickCounts();
+      logger.info('Click counts synced successfully');
+    } catch (error) {
+      logger.error('Error syncing click counts during shutdown:', error);
+    }
+    
+    try {
+      await disconnectRedis();
+      logger.info('Redis disconnected successfully');
+    } catch (error) {
+      logger.error('Error disconnecting Redis:', error);
+    }
+    
     process.exit(0);
   });
 
@@ -85,9 +106,11 @@ const gracefulShutdown = (signal) => {
 
 // Start server
 let server;
-connectDB()
+Promise.all([connectDB(), connectRedis()])
   .then(() => {
-    logger.info("Database connected successfully");
+    logger.info("Database and Redis connected successfully");
+    
+    startClickCountSync();
     server = app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} in ${config.NODE_ENV} mode`);
     });
@@ -97,20 +120,32 @@ connectDB()
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
   })
   .catch((err) => {
-    logger.error("Database connection failed:", err);
+    logger.error("Failed to connect to database or Redis:", err);
     process.exit(1);
   });
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
+process.on('unhandledRejection', async (err) => {
   logger.error('Unhandled Promise Rejection:', err);
-  server.close(() => {
+  server.close(async () => {
+    try {
+      await syncClickCounts();
+      await disconnectRedis();
+    } catch (error) {
+      logger.error('Error during emergency shutdown:', error);
+    }
     process.exit(1);
   });
 });
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
+process.on('uncaughtException', async (err) => {
   logger.error('Uncaught Exception:', err);
+  try {
+    await syncClickCounts();
+    await disconnectRedis();
+  } catch (error) {
+    logger.error('Error during emergency shutdown:', error);
+  }
   process.exit(1);
 });

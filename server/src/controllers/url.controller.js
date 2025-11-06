@@ -2,6 +2,7 @@ import Url from "../models/url.js";
 import { generateUniqueShortId } from "../utils/shortIdGenerator.js";
 import { createUrlSchema, getUrlSchema } from "../validators/url.js";
 import { logger } from "../utils/logger.js";
+import { cacheUrl, getCachedUrl, deleteCachedUrl, incrementClicks, deleteClickCount, refreshUrlTTL } from "../utils/redisService.js";
 
 export const shortenUrlController = async (req, res, next) => {
   try {
@@ -44,6 +45,7 @@ export const shortenUrlController = async (req, res, next) => {
     });
 
     await url.save();
+    cacheUrl(url.shortId, url.longUrl);
 
     logger.info('URL shortened', {
       userId: req.user._id,
@@ -87,33 +89,39 @@ export const getUrlController = async (req, res, next) => {
     }
     
     const { shortId } = validate.data;
-    const url = await Url.findOneAndUpdate(
-      { shortId }, 
-      { $inc: { clicks: 1 } }, 
-      { new: true, lean: true }
-    );
-    
-    if (!url) {
-      return res.status(404).json({
-        success: false,
-        message: "URL not found",
+
+    let longUrl = await getCachedUrl(shortId);
+    if (longUrl) {
+      refreshUrlTTL(shortId);
+      incrementClicks(shortId);
+    } else {
+      const url = await Url.findOne({ shortId }).lean();
+      
+      if (!url) {
+        return res.status(404).json({
+          success: false,
+          message: "URL not found",
+        });
+      }
+
+      longUrl = url.longUrl;
+      
+      cacheUrl(shortId, longUrl);
+      incrementClicks(shortId);
+
+      logger.info('URL accessed from database', {
+        shortId,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
       });
     }
 
-    // Log URL access
-    logger.info('URL accessed', {
-      shortId: url.shortId,
-      clicks: url.clicks,
-      ip: req.ip,
-      userAgent: req.get('User-Agent')
-    });
-
-    // res.status(302).redirect(url.longUrl);
+    // res.status(302).redirect(longUrl);
     res.status(200).json({
       success: true,
       message: "URL retrieved successfully",
       data: {
-        longUrl: url.longUrl,
+        longUrl: longUrl,
       }
     });
   } catch (error) {
@@ -170,6 +178,9 @@ export const deleteUrlController = async (req, res, next) => {
         message: "URL not found or you do not have permission to delete it",
       });
     }
+
+    deleteCachedUrl(shortId);
+    deleteClickCount(shortId);
 
     logger.info('URL deleted', {
       shortId: shortId,
