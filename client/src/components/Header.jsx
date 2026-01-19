@@ -1,131 +1,120 @@
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
 import { useAuth } from "@/context/context";
 import { Link, useNavigate } from "react-router-dom";
-import { logout } from "@/api/auth";
+import { sendPasswordResetCode } from "@/api/auth";
+import { env } from "@/config/env";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Briefcase, KeyRound, LogOut, User2 } from "lucide-react";
+import { useLogout } from "@/hooks/useLogout";
+import { Button } from "./ui/button";
 
 export default function Header() {
-  const { isLoggedIn, setUser } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, loading } = useAuth();
+  const logout = useLogout();
   const navigate = useNavigate();
+  const [sendingCode, setSendingCode] = useState(false);
 
   const handleProfile = () => {
     return navigate("/dashboard");
   };
 
-  const onLogin = () => {
-    return navigate("/auth");
-  };
+  const handleChangePassword = async () => {
+    if (!user?.email) return;
 
-  const onLogout =  () => {
-    logout();
-    setUser(null);
-    return navigate("/auth");
+    setSendingCode(true);
+
+    try {
+      await sendPasswordResetCode(null, user.email);
+      navigate("/auth/reset-password", { state: { email: user.email } });
+    } catch (error) {
+      console.error("Failed to send reset code:", error);
+      navigate("/auth/reset-password", { state: { email: user.email } });
+    } finally {
+      setSendingCode(false);
+    }
   };
 
   return (
-    <header className="bg-white shadow-sm">
-      <div className="container mx-auto px-6 py-3">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              <Link to="/">Clixly</Link>
-            </h1>
-          </div>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-6">
-            {isLoggedIn ? (
-              <>
-                <button
-                  onClick={handleProfile}
-                  className="text-gray-700 hover:text-blue-600 font-medium transition-colors relative group"
-                >
-                  Dashboard
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
-                </button>
-                <button
-                  onClick={onLogout}
-                  className="text-gray-700 hover:text-blue-600 font-medium transition-colors relative group"
-                >
-                  Logout
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
-                </button>
-              </>
-            ) : (
-              <>
-                
-                <button
-                  onClick={onLogin}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-full font-medium hover:shadow-md transition-all transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2"
-                >
-                  Login / Register
-                </button>
-              </>
-            )}
-          </nav>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-gray-700"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-gray-100">
-            <div className="flex flex-col space-y-3 pt-4">
-              {isLoggedIn ? (
-                <>
-                  <button
-                    onClick={() => {
-                      handleProfile();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-left text-gray-700 hover:text-blue-600 font-medium py-2 px-2 hover:bg-gray-50 rounded transition-colors"
+    <header>
+      <nav className="flex py-4 justify-between items-center">
+        <Link to="/">
+          <h1 className="text-2xl md:text-3xl font-semibold cursor-pointer italic">{env.SITE_NAME}</h1>
+        </Link>
+        <div className="flex gap-8 items-center">
+          {!user && !loading && (
+            <Button variant="outline" onClick={() => navigate("/auth/signin")}>
+              Login
+            </Button>
+          )}
+          {user && (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="rounded-full px-3 py-2 flex items-center gap-2 cursor-pointer"
                   >
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                      <User2 size={18} />
+                    </div>
+                    <span className="hidden md:inline text-sm font-medium">
+                      {user.name || user.email}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 bg-gray-900 border-gray-800 text-white"
+                >
+                  <DropdownMenuLabel className="text-gray-400">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium text-white">{user.name}</p>
+                      <p className="text-xs text-gray-400">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+
+                  <DropdownMenuSeparator className="bg-gray-800" />
+
+                  <DropdownMenuItem
+                    onClick={handleProfile}
+                    className="cursor-pointer text-gray-100 hover:bg-gray-800 focus:bg-gray-800 focus:text-white disabled:opacity-50"
+                  >
+                    <Briefcase className="mr-2 h-4 w-4" />
                     Profile
-                  </button>
-                  <button
-                    onClick={() => {
-                      onLogout();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-left text-gray-700 hover:text-blue-600 font-medium py-2 px-2 hover:bg-gray-50 rounded transition-colors"
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem
+                    onClick={handleChangePassword}
+                    disabled={sendingCode}
+                    className="cursor-pointer text-gray-100 hover:bg-gray-800 focus:bg-gray-800 focus:text-white disabled:opacity-50"
                   >
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    {sendingCode ? "Sending code..." : "Change Password"}
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator className="bg-gray-800" />
+
+                  <DropdownMenuItem
+                    onClick={logout}
+                    className="cursor-pointer text-red-400 hover:bg-gray-800 focus:bg-gray-800 focus:text-red-400"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
                     Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => {
-                      onLogin();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-left text-gray-700 hover:text-blue-600 font-medium py-2 px-2 hover:bg-gray-50 rounded transition-colors"
-                  >
-                    Login
-                  </button>
-                  <button
-                    onClick={() => {
-                      onLogin();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 rounded-lg font-medium hover:shadow transition-all"
-                  >
-                    Register
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
+        </div>
+      </nav>
     </header>
   );
 }

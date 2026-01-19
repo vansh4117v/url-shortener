@@ -1,12 +1,16 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import HomePage from "./pages/HomePage";
-import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import RedirectUrl from "./pages/RedirectUrl";
 import Layout from "./components/Layout";
 import ShortLinkDetails from "./pages/ShortLinkDetails";
 import RequireAuth from "./components/required-auth";
 import { UrlProvider } from "./context/context";
+import SignUpPage from "./pages/auth/SignUpPage";
+import SignInPage from "./pages/auth/SignInPage";
+import EmailVerificationPage from "./pages/auth/EmailVerificationPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 
 const router = createBrowserRouter([
   {
@@ -20,7 +24,28 @@ const router = createBrowserRouter([
       },
       {
         path: "auth",
-        element: <Auth />,
+        children: [
+          {
+            path: "signup",
+            element: <SignUpPage />,
+          },
+          {
+            path: "signin",
+            element: <SignInPage />,
+          },
+          {
+            path: "verify-email",
+            element: <EmailVerificationPage />,
+          },
+          {
+            path: "forgot-password",
+            element: <ForgotPasswordPage />,
+          },
+          {
+            path: "reset-password",
+            element: <ResetPasswordPage />,
+          },
+        ],
       },
       {
         path: "dashboard",

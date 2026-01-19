@@ -2,7 +2,14 @@ import Url from "../models/url.js";
 import { generateUniqueShortId } from "../utils/shortIdGenerator.js";
 import { createUrlSchema, getUrlSchema } from "../validators/url.js";
 import { logger } from "../utils/logger.js";
-import { cacheUrl, getCachedUrl, deleteCachedUrl, incrementClicks, deleteClickCount, refreshUrlTTL } from "../utils/redisService.js";
+import {
+  cacheUrl,
+  getCachedUrl,
+  deleteCachedUrl,
+  incrementClicks,
+  deleteClickCount,
+  refreshUrlTTL,
+} from "../utils/redisService.js";
 
 export const shortenUrlController = async (req, res, next) => {
   try {
@@ -31,8 +38,7 @@ export const shortenUrlController = async (req, res, next) => {
           errors: [{ field: "shortId", message: "This short ID is already taken" }],
         });
       }
-    }
-    else {
+    } else {
       const shortId = await generateUniqueShortId();
       body.shortId = shortId;
     }
@@ -40,17 +46,17 @@ export const shortenUrlController = async (req, res, next) => {
     const url = new Url({
       longUrl: body.longUrl,
       shortId: body.shortId,
-      owner: req.user._id,
+      owner: req.user.id,
       title: body.title || "",
     });
 
     await url.save();
     cacheUrl(url.shortId, url.longUrl);
 
-    logger.info('URL shortened', {
-      userId: req.user._id,
+    logger.info("URL shortened", {
+      userId: req.user.id,
       shortId: url.shortId,
-      longUrl: body.longUrl
+      longUrl: body.longUrl,
     });
 
     res.status(201).json({
@@ -64,10 +70,10 @@ export const shortenUrlController = async (req, res, next) => {
       },
     });
   } catch (error) {
-    logger.error('Error in shortenUrlController:', {
+    logger.error("Error in shortenUrlController:", {
       error: error.message,
       userId: req.user?._id,
-      body: req.body
+      body: req.body,
     });
     next(error);
   }
@@ -87,7 +93,7 @@ export const getUrlController = async (req, res, next) => {
         errors: formattedErrors,
       });
     }
-    
+
     const { shortId } = validate.data;
 
     let longUrl = await getCachedUrl(shortId);
@@ -96,7 +102,7 @@ export const getUrlController = async (req, res, next) => {
       incrementClicks(shortId);
     } else {
       const url = await Url.findOne({ shortId }).lean();
-      
+
       if (!url) {
         return res.status(404).json({
           success: false,
@@ -105,14 +111,14 @@ export const getUrlController = async (req, res, next) => {
       }
 
       longUrl = url.longUrl;
-      
+
       cacheUrl(shortId, longUrl);
       incrementClicks(shortId);
 
-      logger.info('URL accessed from database', {
+      logger.info("URL accessed from database", {
         shortId,
         ip: req.ip,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get("User-Agent"),
       });
     }
 
@@ -122,12 +128,12 @@ export const getUrlController = async (req, res, next) => {
       message: "URL retrieved successfully",
       data: {
         longUrl: longUrl,
-      }
+      },
     });
   } catch (error) {
-    logger.error('Error in getUrlController:', {
+    logger.error("Error in getUrlController:", {
       error: error.message,
-      shortId: req.params.shortId
+      shortId: req.params.shortId,
     });
     next(error);
   }
@@ -135,20 +141,18 @@ export const getUrlController = async (req, res, next) => {
 
 export const getAllUrlController = async (req, res, next) => {
   try {
-    const _id = req.user._id;
-    const urls = await Url.find({ owner: _id })
-      .sort({ createdAt: -1 })
-      .lean();
+    const _id = req.user.id;
+    const urls = await Url.find({ owner: _id }).sort({ createdAt: -1 }).lean();
 
     return res.status(200).json({
       success: true,
       message: urls.length ? "Retrieved successfully" : "No URLs found",
-      data: urls
+      data: urls,
     });
   } catch (error) {
-    logger.error('Error in getAllUrlController:', {
+    logger.error("Error in getAllUrlController:", {
       error: error.message,
-      userId: req.user._id
+      userId: req.user.id,
     });
     next(error);
   }
@@ -168,10 +172,10 @@ export const deleteUrlController = async (req, res, next) => {
         errors: formattedErrors,
       });
     }
-    
+
     const { shortId } = validate.data;
-    const url = await Url.deleteOne({ shortId, owner: req.user._id });
-    
+    const url = await Url.deleteOne({ shortId, owner: req.user.id });
+
     if (!url.deletedCount) {
       return res.status(404).json({
         success: false,
@@ -182,9 +186,9 @@ export const deleteUrlController = async (req, res, next) => {
     deleteCachedUrl(shortId);
     deleteClickCount(shortId);
 
-    logger.info('URL deleted', {
+    logger.info("URL deleted", {
       shortId: shortId,
-      userId: req.user._id
+      userId: req.user.id,
     });
 
     res.status(200).json({
@@ -192,10 +196,10 @@ export const deleteUrlController = async (req, res, next) => {
       message: "URL deleted successfully",
     });
   } catch (error) {
-    logger.error('Error in deleteUrlController:', {
+    logger.error("Error in deleteUrlController:", {
       error: error.message,
-      userId: req.user._id,
-      shortId: req.params.shortId
+      userId: req.user.id,
+      shortId: req.params.shortId,
     });
     next(error);
   }
@@ -215,10 +219,10 @@ export const getUrlInfoController = async (req, res, next) => {
         errors: formattedErrors,
       });
     }
-    
+
     const { shortId } = validate.data;
-    const url = await Url.findOne({ shortId, owner: req.user._id }).lean();
-    
+    const url = await Url.findOne({ shortId, owner: req.user.id }).lean();
+
     if (!url) {
       return res.status(404).json({
         success: false,
@@ -229,14 +233,14 @@ export const getUrlInfoController = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "URL info retrieved successfully",
-      data: url
+      data: url,
     });
   } catch (error) {
-    logger.error('Error in getUrlInfoController:', {
+    logger.error("Error in getUrlInfoController:", {
       error: error.message,
-      userId: req.user._id,
-      shortId: req.params.shortId
+      userId: req.user.id,
+      shortId: req.params.shortId,
     });
     next(error);
   }
-}
+};

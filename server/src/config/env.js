@@ -11,7 +11,12 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),
   JWT_EXPIRES_IN: z.string().default("7d"),
   ALLOWED_ORIGINS: z.string().optional(),
-  REDIS_URL: z.string().default("redis://localhost:6379"),
+  REDIS_URL: z.string(),
+  SMTP_HOST: z.string().min(1, "SMTP_HOST is required"),
+  SMTP_USER: z.string().email("SMTP_USER must be a valid email"),
+  SMTP_PASS: z.string().min(1, "SMTP_PASS is required"),
+  SENDER_EMAIL: z.string().email("SENDER_EMAIL must be a valid email"),
+  SITE_NAME: z.string().min(1, "SITE_NAME is required"),
 });
 
 export const validateEnv = () => {

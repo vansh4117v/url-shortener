@@ -66,7 +66,7 @@ const HomePage = () => {
       await fnCreateShortLink(data);
     } else {
       setLinkData(data);
-      navigate("/auth");
+      navigate("/auth/signin");
     }
   };
 
@@ -126,13 +126,17 @@ const HomePage = () => {
                   } focus:outline-none focus:ring-2 transition-all`}
                   placeholder="https://example.com/very/long/url"
                 />
-                <div className="min-h-[24px] mt-1">
-                  {errors.longUrl && <Error message={errors.longUrl.message} />}
-                  {/* API validation error for longUrl */}
-                  {error?.errors?.find((e) => e.field === "longUrl") && (
+                {errors.longUrl && (
+                  <div className="mt-1">
+                    <Error message={errors.longUrl.message} />
+                  </div>
+                )}
+                {/* API validation error for longUrl */}
+                {error?.errors?.find((e) => e.field === "longUrl") && (
+                  <div className="mt-1">
                     <Error message={error.errors.find((e) => e.field === "longUrl").message} />
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
 

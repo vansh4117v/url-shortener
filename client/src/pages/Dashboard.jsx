@@ -94,7 +94,7 @@ function Dashboard() {
   }, [data, error, loading]);
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="container mx-auto px-4 py-4 max-w-6xl">
       {/* User Profile Section */}
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden mb-8">
         <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100">

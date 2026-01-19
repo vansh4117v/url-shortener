@@ -53,7 +53,7 @@ export const syncClickCounts = async () => {
 export const startClickCountSync = () => {
   syncClickCounts();
 
-  setInterval(syncClickCounts, 5 * 60 * 1000);
+  setInterval(syncClickCounts, 1 * 60 * 1000);
 
-  logger.info("Click count sync started (every 5 minutes)");
+  logger.info("Click count sync started (every 1 minutes)");
 };

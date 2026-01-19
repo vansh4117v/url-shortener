@@ -9,7 +9,7 @@ function RequireAuth({ children }) {
   const { loading, isLoggedIn } = useAuth();
 
   useEffect(() => {
-    if (!isLoggedIn && loading === false) navigate("/auth");
+    if (!isLoggedIn && loading === false) navigate("/auth/signin");
   }, [isLoggedIn, loading, navigate]);
 
   if (loading) return <BarLoader width={"100%"} color="#36d7b7" />;

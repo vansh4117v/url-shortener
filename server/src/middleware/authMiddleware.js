@@ -1,50 +1,38 @@
-import User from "../models/user.js";
 import { verifyToken } from "../utils/jwt.js";
 import { logger } from "../utils/logger.js";
 
-export const jwtVerify = async (req, res, next) => {
+export const jwtVerifyMiddleware = (req, res, next) => {
   try {
-    let token = req.cookies.jwt;
+    let token = req?.cookies?.token;
     
     if (!token && req.headers.authorization) {
       const authHeader = req.headers.authorization;
-      if (authHeader.startsWith('Bearer ')) {
+      if (authHeader.startsWith("Bearer ")) {
         token = authHeader.substring(7);
       }
     }
 
     if (!token) {
-      return res.status(401).json({ 
-        success: false, 
-        message: "Access token required", 
-        errors: [] 
-      });
-    }
-
-    const decoded = verifyToken(token);
-    const userId = decoded.id;
-    
-    // Check if user still exists
-    const user = await User.findById(userId).select("-password").lean();
-    if (!user) {
       return res.status(401).json({
         success: false,
-        message: "User no longer exists",
+        message: "Unauthorized: No token provided",
         errors: [],
       });
     }
-
-    // Add user to request object
-    req.user = user;
+    
+    const decoded = verifyToken(token);
+    req.user = decoded;
     next();
+
   } catch (error) {
     logger.warn('JWT verification failed:', {
       error: error.message,
       ip: req.ip,
-      userAgent: req.get('User-Agent')
+      userAgent: req.get('User-Agent'),
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
     });
 
-    if (error.name === 'TokenExpiredError') {
+    if (error.message.includes('expired')) {
       return res.status(401).json({
         success: false,
         message: "Access token expired",

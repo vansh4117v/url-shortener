@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const useFetch = (cb) => {
+const useFetch = (cb, options = {}) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -9,7 +9,7 @@ const useFetch = (cb) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await cb(...args);
+      const response = await cb(options,...args);
       // If API returns success: false, treat as error
       if (response && response.success === false) {
         setError({
@@ -26,6 +26,7 @@ const useFetch = (cb) => {
         setError({
           message: err.response.data.message || err.message,
           errors: err.response.data.errors || [],
+          status: err.response.status,
         });
       } else {
         setError({ message: err.message || "Unknown error", errors: [] });
@@ -35,7 +36,12 @@ const useFetch = (cb) => {
     }
   };
 
-  return { data, loading, error, fn };
+  return { 
+    data,
+    loading, 
+    error, 
+    fn 
+  };
 };
 
 export default useFetch;

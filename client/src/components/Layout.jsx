@@ -7,7 +7,7 @@ const Layout = () => {
     <AuthProvider>
       <UrlProvider>
         <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-          <header>
+          <header className="container mx-auto px-4 py-4">
             <Header />
           </header>
 
