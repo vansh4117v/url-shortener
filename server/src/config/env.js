@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { logger } from "../utils/logger.js";
+import { formatZodErrors } from "../utils/formatZodErrors.js";
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
@@ -20,15 +21,13 @@ const envSchema = z.object({
 });
 
 export const validateEnv = () => {
-  try {
-    return envSchema.parse(process.env);
-  } catch (error) {
-    logger.error("Invalid environment variables:");
-    error.errors.forEach((err) => {
-      logger.error(`  ${err.path.join(".")}: ${err.message}`);
-    });
+  const parsedEnv = envSchema.safeParse(process.env);
+  if (!parsedEnv.success) {
+    const formattedErrors = formatZodErrors(parsedEnv.error);
+    logger.error("Invalid environment variables:", formattedErrors);
     process.exit(1);
   }
+  return parsedEnv.data;
 };
 
 export const config = validateEnv();
