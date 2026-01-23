@@ -19,7 +19,7 @@ const PORT = config.PORT;
 
 // Security middleware
 app.use(securityConfig.helmet);
-app.use(securityConfig.cors);
+//app.use(securityConfig.cors);
 
 // Trust proxy for rate limiting and IP logging
 app.set('trust proxy', 1);

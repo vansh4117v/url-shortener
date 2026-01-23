@@ -25,7 +25,7 @@ export const jwtVerifyMiddleware = (req, res, next) => {
     next();
 
   } catch (error) {
-    logger.warn('JWT verification failed:', {
+    logger.info('JWT verification failed:', {
       error: error.message,
       ip: req.ip,
       userAgent: req.get('User-Agent'),

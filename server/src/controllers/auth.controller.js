@@ -29,7 +29,7 @@ export const signUpController = asyncHandler(async (req, res) => {
   const userData = validate.data;
   const existingUser = await User.exists({ email: userData.email });
   if (existingUser) {
-    logger.warn("Registration attempt with existing email", {
+    logger.info("Registration attempt with existing email", {
       email: userData.email,
       ip: req.ip,
       userAgent: req.get("User-Agent"),
@@ -89,7 +89,7 @@ export const signInController = asyncHandler(async (req, res) => {
     isPasswordMatch = await user.comparePassword(userData.password);
   }
   if (!user || !isPasswordMatch) {
-    logger.warn("Failed login attempt", {
+    logger.info("Failed login attempt", {
       email: userData.email,
       ip: req.ip,
       userAgent: req.get("User-Agent"),
@@ -247,7 +247,7 @@ export const refreshTokenController = asyncHandler(async (req, res) => {
   try {
     decoded = verifyToken(refreshToken);
   } catch (error) {
-    logger.warn("Invalid refresh token attempt", {
+    logger.info("Invalid refresh token attempt", {
       ip: req.ip,
       userAgent: req.get("User-Agent"),
       error: error.message,
@@ -260,7 +260,7 @@ export const refreshTokenController = asyncHandler(async (req, res) => {
   }
   const user = await User.findById(decoded.id).select("+refreshToken");
   if (!user) {
-    logger.warn("Refresh token attempt for non-existent user", {
+    logger.info("Refresh token attempt for non-existent user", {
       userId: decoded?.id,
       ip: req.ip,
       userAgent: req.get("User-Agent"),
@@ -270,7 +270,7 @@ export const refreshTokenController = asyncHandler(async (req, res) => {
 
   const isValidRefresh = await user.compareRefreshToken(refreshToken);
   if (!isValidRefresh) {
-    logger.warn("Refresh token mismatch", {
+    logger.info("Refresh token mismatch", {
       userId: decoded?.id,
       ip: req.ip,
       userAgent: req.get("User-Agent"),
@@ -326,7 +326,7 @@ export const verifyEmailController = asyncHandler(async (req, res) => {
   }
   const isOtpValid = await user.compareOtp(otp, "verifyOtp");
   if (!isOtpValid || Date.now() > user.verifyOtpExpireAt) {
-    logger.warn("Invalid or expired OTP attempt", {
+    logger.info("Invalid or expired OTP attempt", {
       userId: user._id,
       email: user.email,
       ip: req.ip,
@@ -437,7 +437,7 @@ export const resetPasswordController = asyncHandler(async (req, res) => {
   }
   const isOtpValid = await user.compareOtp(otp, "resetOtp");
   if (!isOtpValid || Date.now() > user.resetOtpExpireAt) {
-    logger.warn("Invalid or expired reset OTP attempt", {
+    logger.info("Invalid or expired reset OTP attempt", {
       userId: user._id,
       email: user.email,
       ip: req.ip,
