@@ -16,7 +16,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Handle token refresh on 401
@@ -36,7 +36,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (!originalRequest || originalRequest.url?.includes("/auth/refresh-token")) {
+    if (
+      !originalRequest ||
+      originalRequest.url?.includes("/auth/refresh-token") ||
+      originalRequest.url?.includes("/auth/signin") ||
+      originalRequest.url?.includes("/auth/signup")
+    ) {
       return Promise.reject(error);
     }
 
@@ -61,7 +66,7 @@ api.interceptors.response.use(
         const { data } = await axios.post(
           `${env.API_BASE_URL}/auth/refresh-token`,
           {},
-          { withCredentials: true }
+          { withCredentials: true },
         );
 
         const newToken = data?.token;
@@ -84,7 +89,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
