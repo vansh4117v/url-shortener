@@ -31,7 +31,7 @@ jobs:
             -t ${{ secrets.DOCKER_USERNAME }}/url-shortener-client:latest ./client
           docker push ${{ secrets.DOCKER_USERNAME }}/url-shortener-client:latest
 
-      # 2. Create the .env locally on the Runner (Safe from shell expansion)
+      # 2. Create the .env locally on the Runner
       - name: Create server .env file
         run: |
           cat <<EOF > .env
@@ -51,17 +51,17 @@ jobs:
           SITE_NAME=Clixly
           EOF
 
-      # 3. Transfer EVERYTHING via SCP
+      # 3. Transfer Config Files via SCP
+      # We explicitly set port 22 to avoid the "dial tcp ***:5000" timeout error
       - name: Copy Config Files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          # Transfers compose and nginx to root, and .env to server folder
+          port: 22
           source: "docker-compose.yml,nginx.conf,.env"
           target: "url-shortener/"
-          # This command ensures files go into the right subfolders after arrival
           rm: false 
 
       # We need to move the .env into the server folder specifically
@@ -71,6 +71,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           script: |
             mkdir -p url-shortener/server
             mv url-shortener/.env url-shortener/server/.env
@@ -83,6 +84,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           script: |
             cd url-shortener
             docker compose pull
