@@ -1,0 +1,90 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # 1. Build & Push
+      - name: Build and Push Server Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/url-shortener-server:latest ./server
+          docker push ${{ secrets.DOCKER_USERNAME }}/url-shortener-server:latest
+
+      - name: Build and Push Client Image
+        run: |
+          docker build \
+            --build-arg VITE_API_BASE_URL="/api" \
+            --build-arg VITE_BASE_URL="https://clixly.vnsh.tech" \
+            --build-arg VITE_SITE_NAME="Clixly" \
+            -t ${{ secrets.DOCKER_USERNAME }}/url-shortener-client:latest ./client
+          docker push ${{ secrets.DOCKER_USERNAME }}/url-shortener-client:latest
+
+      # 2. Create the .env locally on the Runner (Safe from shell expansion)
+      - name: Create server .env file
+        run: |
+          cat <<EOF > .env
+          NODE_ENV=production
+          PORT=5000
+          MONGO_URI=${{ secrets.MONGO_URI }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }}
+          REDIS_URL=${{ secrets.REDIS_URL }}
+          SMTP_HOST=${{ secrets.SMTP_HOST }}
+          SMTP_USER=${{ secrets.SMTP_USER }}
+          SMTP_PASS=${{ secrets.SMTP_PASS }}
+          SENDER_EMAIL=${{ secrets.SENDER_EMAIL }}
+          CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+          SITE_NAME=Clixly
+          EOF
+
+      # 3. Transfer EVERYTHING via SCP
+      - name: Copy Config Files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          # Transfers compose and nginx to root, and .env to server folder
+          source: "docker-compose.yml,nginx.conf,.env"
+          target: "url-shortener/"
+          # This command ensures files go into the right subfolders after arrival
+          rm: false 
+
+      # We need to move the .env into the server folder specifically
+      - name: Move .env to server folder
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            mkdir -p url-shortener/server
+            mv url-shortener/.env url-shortener/server/.env
+            chmod 600 url-shortener/server/.env
+
+      # 4. Final Deploy
+      - name: SSH and Deploy
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd url-shortener
+            docker compose pull
+            docker compose up -d --force-recreate --remove-orphans
+            docker image prune -f
