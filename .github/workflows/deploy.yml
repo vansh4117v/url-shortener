@@ -31,37 +31,10 @@ jobs:
             -t ${{ secrets.DOCKER_USERNAME }}/url-shortener-client:latest ./client
           docker push ${{ secrets.DOCKER_USERNAME }}/url-shortener-client:latest
 
-      # ===== TEST STEP START =====
-      - name: Test SSH connectivity
-        run: |
-          echo "Host: ${{ secrets.EC2_HOST }}"
-          
-          # Check if host accidentally contains a port
-          if [[ "${{ secrets.EC2_HOST }}" == *:* ]]; then
-            echo "Host contains port -> ${{ secrets.EC2_HOST }}"
-          fi
-
-          # Test port 22
-          timeout 5 bash -c ">/dev/tcp/${{ secrets.EC2_HOST }}/22" \
-            && echo "Port 22 reachable" \
-            || echo "Port 22 NOT reachable"
-
-          # Test SSH authentication
-          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
-          chmod 600 key.pem
-          ssh -o StrictHostKeyChecking=no \
-              -o ConnectTimeout=5 \
-              -i key.pem \
-              -p 22 \
-              ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-              "echo SSH success" || echo "SSH failed"
-      # ===== TEST STEP END =====
-
-
-      # 2. Create the .env locally on the Runner
+      # 2. Create the .env locally on the Runner with a safe filename
       - name: Create server .env file
         run: |
-          cat <<EOF > .env
+          cat <<EOF > .env.server
           NODE_ENV=production
           PORT=5000
           MONGO_URI=${{ secrets.MONGO_URI }}
@@ -79,7 +52,7 @@ jobs:
           EOF
 
       # 3. Transfer Config Files via SCP
-      # We explicitly set port 22 to avoid the "dial tcp ***:5000" timeout error
+      # Using .env.server prevents the action from overriding port 22
       - name: Copy Config Files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -87,11 +60,11 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          source: "docker-compose.yml,nginx.conf,.env"
+          source: "docker-compose.yml,nginx.conf,.env.server"
           target: "url-shortener/"
           rm: false 
 
-      # We need to move the .env into the server folder specifically
+      # We need to move the file into the server folder and rename it back to .env
       - name: Move .env to server folder
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -101,7 +74,7 @@ jobs:
           port: 22
           script: |
             mkdir -p url-shortener/server
-            mv url-shortener/.env url-shortener/server/.env
+            mv url-shortener/.env.server url-shortener/server/.env
             chmod 600 url-shortener/server/.env
 
       # 4. Final Deploy
