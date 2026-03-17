@@ -9,7 +9,7 @@ services:
     restart: always
 
   server:
-    image: vansh4117v/url-shortener-server:latest
+    image: vansh4117v/url-shortener-server:${IMAGE_TAG}
     ports:
       - "5000:5000"
     env_file:
@@ -19,12 +19,7 @@ services:
     restart: always
 
   client-build:
-    image: vansh4117v/url-shortener-client:latest
-      # context: ./client
-      # args:
-      #   VITE_API_BASE_URL: ${VITE_API_BASE_URL}
-      #   VITE_BASE_URL: ${VITE_BASE_URL}
-      #   VITE_SITE_NAME: ${VITE_SITE_NAME}
+    image: vansh4117v/url-shortener-client:${IMAGE_TAG}
     volumes:
       - client-build:/usr/share/nginx/html
 

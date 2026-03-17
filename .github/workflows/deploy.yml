@@ -1,17 +1,39 @@
-name: Deploy
+name: CI-CD
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  build-and-deploy:
+  ci:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Backend Dependencies
+        run: |
+          cd server
+          npm install
+
+      - name: Run Backend Tests
+        run: |
+          cd server
+          npm test
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
@@ -19,8 +41,8 @@ jobs:
       # 1. Build & Push
       - name: Build and Push Server Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/url-shortener-server:latest ./server
-          docker push ${{ secrets.DOCKER_USERNAME }}/url-shortener-server:latest
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/url-shortener-server:${{ github.sha }} ./server
+          docker push ${{ secrets.DOCKER_USERNAME }}/url-shortener-server:${{ github.sha }}
 
       - name: Build and Push Client Image
         run: |
@@ -28,8 +50,8 @@ jobs:
             --build-arg VITE_API_BASE_URL="/api" \
             --build-arg VITE_BASE_URL="https://clixly.vnsh.tech" \
             --build-arg VITE_SITE_NAME="Clixly" \
-            -t ${{ secrets.DOCKER_USERNAME }}/url-shortener-client:latest ./client
-          docker push ${{ secrets.DOCKER_USERNAME }}/url-shortener-client:latest
+            -t ${{ secrets.DOCKER_USERNAME }}/url-shortener-client:${{ github.sha }} ./client
+          docker push ${{ secrets.DOCKER_USERNAME }}/url-shortener-client:${{ github.sha }}
 
       # 2. Create the .env locally on the Runner with a safe filename
       - name: Create server .env file
@@ -78,7 +100,7 @@ jobs:
             chmod 600 url-shortener/server/.env
 
       # 4. Final Deploy
-      - name: SSH and Deploy
+      - name: Deploy with Health Check
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -87,6 +109,27 @@ jobs:
           port: 22
           script: |
             cd url-shortener
+
+            export IMAGE_TAG=${{ github.sha }}
+
             docker compose pull
             docker compose up -d --force-recreate --remove-orphans
-            docker image prune -f
+
+            echo "Waiting for app to start..."
+            sleep 5
+
+            for i in {1..10}; do
+              if curl -f http://localhost:5000/health; then
+                echo "Deployment successful"
+
+                # CLEANUP
+                docker image prune -f
+
+                exit 0
+              fi
+              echo "Retrying health check..."
+              sleep 3
+            done
+
+            echo "Deployment failed"
+            exit 1
