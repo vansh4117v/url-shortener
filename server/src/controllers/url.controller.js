@@ -9,6 +9,10 @@ import {
   incrementClicks,
   deleteClickCount,
   refreshUrlTTL,
+  acquireUrlLock,
+  releaseUrlLock,
+  waitForCachedUrl,
+  isRedisAvailable,
 } from "../utils/redisService.js";
 
 export const shortenUrlController = async (req, res, next) => {
@@ -96,31 +100,77 @@ export const getUrlController = async (req, res, next) => {
 
     const { shortId } = validate.data;
 
-    let longUrl = await getCachedUrl(shortId);
-    if (longUrl) {
-      refreshUrlTTL(shortId);
-      incrementClicks(shortId);
-    } else {
+    const respondNotFound = () =>
+      res.status(404).json({
+        success: false,
+        message: "URL not found",
+      });
+
+    const fetchFromDb = async () => {
       const url = await Url.findOne({ shortId }).lean();
-
-      if (!url) {
-        return res.status(404).json({
-          success: false,
-          message: "URL not found",
-        });
-      }
-
-      longUrl = url.longUrl;
-
-      cacheUrl(shortId, longUrl);
-      incrementClicks(shortId);
+      if (!url) return null;
 
       logger.info("URL accessed from database", {
         shortId,
         ip: req.ip,
         userAgent: req.get("User-Agent"),
       });
+
+      return url.longUrl;
+    };
+
+    let longUrl = await getCachedUrl(shortId);
+    let fromCache = false;
+
+    if (longUrl) {
+      fromCache = true;
+    } else if (!isRedisAvailable()) {
+      longUrl = await fetchFromDb();
+      if (!longUrl) return respondNotFound();
+    } else {
+      const lockToken = await acquireUrlLock(shortId);
+
+      if (lockToken) {
+        try {
+          longUrl = await fetchFromDb();
+          if (!longUrl) return respondNotFound();
+
+          await cacheUrl(shortId, longUrl);
+        } finally {
+          await releaseUrlLock(shortId, lockToken);
+        }
+      } else {
+        longUrl = await waitForCachedUrl(shortId);
+
+        if (longUrl) {
+          fromCache = true;
+        } else {
+          const retryToken = await acquireUrlLock(shortId);
+
+          if (retryToken) {
+            try {
+              longUrl = await fetchFromDb();
+              if (!longUrl) return respondNotFound();
+
+              await cacheUrl(shortId, longUrl);
+            } finally {
+              await releaseUrlLock(shortId, retryToken);
+            }
+          } else {
+            longUrl = await fetchFromDb();
+            if (!longUrl) return respondNotFound();
+
+            await cacheUrl(shortId, longUrl);
+          }
+        }
+      }
     }
+
+    if (fromCache) {
+      refreshUrlTTL(shortId);
+    }
+
+    incrementClicks(shortId);
 
     // res.status(302).redirect(longUrl);
     res.status(200).json({
