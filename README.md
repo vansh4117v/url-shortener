@@ -3,7 +3,7 @@
 <!-- Badges -->
 ![React](https://img.shields.io/badge/React-19.0.0-blue) ![Vite](https://img.shields.io/badge/Vite-7.0.4-brightgreen) ![Express](https://img.shields.io/badge/Express-5.1.0-lightgrey) ![Mongoose](https://img.shields.io/badge/Mongoose-8.17.1-red) ![Redis client](https://img.shields.io/badge/redis--client-5.9.0-orange) ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.1.12-blueviolet) ![Node](https://img.shields.io/badge/Node-%3E%3D16-brightgreen)
 
-A full‑stack URL shortener built with React (Vite) frontend and an Express + MongoDB backend. Features include user authentication (JWT via cookies), custom short IDs, click tracking with Redis caching, and rate limiting.
+A full‑stack URL shortener built with React (Vite) frontend and an Express + MongoDB backend. Dockerized and Deployed on EC2 using Github Actions pipeline
 
 
 
